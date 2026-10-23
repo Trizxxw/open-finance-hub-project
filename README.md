@@ -119,7 +119,3 @@ Para entrar no protótipo, use qualquer usuário e uma senha que cumpra os quatr
 - O login não autentica: as telas internas podem ser abertas diretamente, sem sessão.
 - Os links "Esqueci a senha" e "Criar conta" ainda não levam a lugar nenhum.
 - O estado das conexões e dos filtros não é salvo; ao recarregar a página tudo volta ao padrão.
-
-## Autora
-
-Tainá Grunberg — [@tainagrunberg](https://github.com/tainagrunberg)
