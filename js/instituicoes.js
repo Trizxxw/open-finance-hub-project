@@ -1,55 +1,80 @@
-
-
-const lista = document.getElementById('lista-instituicoes');
+  const lista = document.getElementById('lista-instituicoes');
 const aviso = document.getElementById('aviso-status');
 
+const CHAVE_STORAGE = 'openFinanceHub:conexoes';
 
-function atualizarCard(card, conectado) {
-  const nome  = card.dataset.nome;
+function carregarConexoes() {
+  try {
+    const salvo = localStorage.getItem(CHAVE_STORAGE);
+    const dados = salvo ? JSON.parse(salvo) : {};
+
+    return dados && typeof dados === 'object' && !Array.isArray(dados)
+      ? dados
+      : {};
+  } catch (erro) {
+    return {};
+  }
+}
+
+function salvarConexao(nome, conectado) {
+  try {
+    const dados = carregarConexoes();
+    dados[nome] = conectado;
+
+    localStorage.setItem(CHAVE_STORAGE, JSON.stringify(dados));
+  } catch (erro) {
+    console.error('Não foi possível salvar a conexão:', erro);
+  }
+}
+
+function aplicarEstado(card, conectado) {
+  const nome = card.dataset.nome;
   const badge = card.querySelector('.badge');
-  const desc  = card.querySelector('.conn__desc');
+  const desc = card.querySelector('.conn__desc');
   const botao = card.querySelector('.conn__btn');
 
-  
   card.classList.toggle('conn--on', conectado);
   card.classList.toggle('conn--off', !conectado);
 
-  
   badge.classList.toggle('badge--on', conectado);
   badge.classList.toggle('badge--off', !conectado);
   badge.textContent = conectado ? 'Conectado' : 'Desconectado';
 
-  
-  desc.textContent = conectado ? 'Dados compartilhados' : 'Sem compartilhamento';
+  desc.textContent = conectado
+    ? 'Dados compartilhados'
+    : 'Sem compartilhamento';
 
-  
   botao.classList.toggle('conn__btn--outline', conectado);
   botao.classList.toggle('conn__btn--solid', !conectado);
   botao.textContent = conectado ? 'Revogar acesso' : 'Conectar';
+    botao.setAttribute('aria-label', `${botao.textContent} ${nome}`);
+}
 
-  
-  botao.setAttribute('aria-label', `${botao.textContent} ${nome}`);
+function atualizarCard(card, conectado) {
+  if (!card) return;
 
-  
+  const nome = card.dataset.nome;
+
+  aplicarEstado(card, conectado);
+  salvarConexao(nome, conectado);
+
   aviso.textContent = conectado
     ? `${nome} conectado. Dados compartilhados.`
     : `Acesso do ${nome} revogado. Sem compartilhamento.`;
 }
 
-
-const modal        = document.getElementById('modal-revogar');
-const modalTitulo  = document.getElementById('modal-titulo');
-const btnVoltar    = document.getElementById('modal-voltar');
+const modal = document.getElementById('modal-revogar');
+const modalTitulo = document.getElementById('modal-titulo');
+const btnVoltar = document.getElementById('modal-voltar');
 const btnConfirmar = document.getElementById('modal-confirmar');
 
-let cardAlvo = null;     
-let botaoOrigem = null;  
+let cardAlvo = null;
+let botaoOrigem = null;
 
 function abrirModal(card, botao) {
   cardAlvo = card;
   botaoOrigem = botao;
 
-  
   modalTitulo.textContent = `Revogar acesso ao ${card.dataset.nome}?`;
 
   modal.classList.remove('hidden');
@@ -58,45 +83,49 @@ function abrirModal(card, botao) {
 
 function fecharModal() {
   modal.classList.add('hidden');
-  if (botaoOrigem) botaoOrigem.focus();
+
+  if (botaoOrigem) {
+    botaoOrigem.focus();
+  }
+
   cardAlvo = null;
   botaoOrigem = null;
-}
+  }
 
-
-lista.addEventListener('click', (evento) => {
+  lista.addEventListener('click', (evento) => {
   const botao = evento.target.closest('.conn__btn');
   if (!botao) return;
 
   const card = botao.closest('.conn');
 
   if (card.classList.contains('conn--on')) {
-    abrirModal(card, botao);        
+    abrirModal(card, botao);
   } else {
-      abrirModalConectar(card, botao); 
+    abrirModalConectar(card, botao);
   }
-});
+  });
 
+  btnVoltar.addEventListener('click', fecharModal);
 
-btnVoltar.addEventListener('click', fecharModal);
+  modal.addEventListener('click', (evento) => {
+  if (evento.target === modal) {
+    fecharModal();
+  }
+  });
 
-
-modal.addEventListener('click', (evento) => {
-  if (evento.target === modal) fecharModal();
-});
-
-
-btnConfirmar.addEventListener('click', () => {
+  btnConfirmar.addEventListener('click', () => {
   const card = cardAlvo;
+
   fecharModal();
   atualizarCard(card, false);
-});
+  });
 
-
-document.addEventListener('keydown', (evento) => {
+  document.addEventListener('keydown', (evento) => {
   if (modal.classList.contains('hidden')) return;
 
-  if (evento.key === 'Escape') fecharModal();
+  if (evento.key === 'Escape') {
+    fecharModal();
+  }
 
   if (evento.key === 'Tab') {
     if (evento.shiftKey && document.activeElement === btnVoltar) {
@@ -109,58 +138,18 @@ document.addEventListener('keydown', (evento) => {
   }
 });
 
-
-
-
-btnVoltar.addEventListener('click', fecharModal);
-
-
-modal.addEventListener('click', (evento) => {
-  if (evento.target === modal) fecharModal();
-});
-
-
-btnConfirmar.addEventListener('click', () => {
-  atualizarCard(cardAlvo, false);
-  fecharModal();
-});
-
-
-document.addEventListener('keydown', (evento) => {
-  if (modal.classList.contains('hidden')) return;
-
-  if (evento.key === 'Escape') {
-    fecharModal();
-  }
-
-  if (evento.key === 'Tab') {
-    const primeiro = btnVoltar;
-    const ultimo = btnConfirmar;
-
-    if (evento.shiftKey && document.activeElement === primeiro) {
-      evento.preventDefault();
-      ultimo.focus();
-    } else if (!evento.shiftKey && document.activeElement === ultimo) {
-      evento.preventDefault();
-      primeiro.focus();
-    }
-  }
-});
-
-
-const modalConectar     = document.getElementById('modal-conectar');
-const conectarNome      = document.getElementById('modal-conectar-instituicao');
+const modalConectar = document.getElementById('modal-conectar');
+const conectarNome = document.getElementById('modal-conectar-instituicao');
 const btnConectarVoltar = document.getElementById('modal-conectar-voltar');
-const btnConectarOk     = document.getElementById('modal-conectar-confirmar');
+const btnConectarOk = document.getElementById('modal-conectar-confirmar');
 
-let cardConectar = null;     
-let botaoConectar = null;    
+let cardConectar = null;
+let botaoConectar = null;
 
 function abrirModalConectar(card, botao) {
   cardConectar = card;
   botaoConectar = botao;
 
-  
   conectarNome.textContent = card.dataset.nome;
 
   modalConectar.classList.remove('hidden');
@@ -169,31 +158,36 @@ function abrirModalConectar(card, botao) {
 
 function fecharModalConectar() {
   modalConectar.classList.add('hidden');
-  if (botaoConectar) botaoConectar.focus();
+
+  if (botaoConectar) {
+    botaoConectar.focus();
+  }
+
   cardConectar = null;
   botaoConectar = null;
-}
+  }
 
+  btnConectarVoltar.addEventListener('click', fecharModalConectar);
 
-btnConectarVoltar.addEventListener('click', fecharModalConectar);
+  modalConectar.addEventListener('click', (evento) => {
+  if (evento.target === modalConectar) {
+    fecharModalConectar();
+  }
+  });
 
-
-modalConectar.addEventListener('click', (evento) => {
-  if (evento.target === modalConectar) fecharModalConectar();
-});
-
-
-btnConectarOk.addEventListener('click', () => {
+  btnConectarOk.addEventListener('click', () => {
   const card = cardConectar;
+
   fecharModalConectar();
   atualizarCard(card, true);
-});
+  });
 
-
-document.addEventListener('keydown', (evento) => {
+  document.addEventListener('keydown', (evento) => {
   if (modalConectar.classList.contains('hidden')) return;
 
-  if (evento.key === 'Escape') fecharModalConectar();
+  if (evento.key === 'Escape') {
+    fecharModalConectar();
+  }
 
   if (evento.key === 'Tab') {
     if (evento.shiftKey && document.activeElement === btnConectarVoltar) {
@@ -206,8 +200,14 @@ document.addEventListener('keydown', (evento) => {
   }
 });
 
+const conexoesSalvas = carregarConexoes();
 
 document.querySelectorAll('.conn').forEach((card) => {
-  const botao = card.querySelector('.conn__btn');
-  botao.setAttribute('aria-label', `${botao.textContent} ${card.dataset.nome}`);
+  const nome = card.dataset.nome;
+
+  if (typeof conexoesSalvas[nome] === 'boolean') {
+    aplicarEstado(card, conexoesSalvas[nome]);
+  } else {
+    aplicarEstado(card, false);
+  }
 });
