@@ -2,17 +2,36 @@
 
 Protótipo front-end de um hub financeiro baseado em Open Finance: reúne contas, cartões e investimentos de várias instituições em um só lugar, com filtros, contexto e confirmações claras a cada ação.
 
-**Demo:** https://tainagrunberg.github.io/open-finance-hub-project/
+**Aplicação publicada (Render):** https://open-finance-hub-project.onrender.com
 
-> Projeto estático feito só com HTML, CSS e JavaScript puro. Todos os dados exibidos são fictícios e não há back-end nem autenticação real.
+
+Projeto estático feito só com HTML, CSS e JavaScript puro. Todos os dados exibidos são fictícios e não há back-end nem autenticação real.
+
+## Melhoria implementada (evolução e manutenção)
+
+| Item | Descrição |
+|---|---|
+| **Problema** | O estado das conexões com as instituições não era salvo; ao recarregar a página, tudo voltava ao padrão. |
+| **Melhoria** | Salvar o estado das conexões no navegador (`localStorage`). Conectar ou revogar uma instituição passa a ser lembrado após recarregar a página. |
+| **Tipo de manutenção** | Perfectiva (evolutiva): aprimora uma funcionalidade existente, sem corrigir erro nem mudar de ambiente. |
+| **Arquivos alterados** | `instituicoes.html`, `js/instituicoes.js` e `README.md` |
+
+### Como foi feito
+
+1. Análise do sistema existente e identificação da limitação (já registrada no README).
+2. Implementação da persistência no `js/instituicoes.js` e ajustes em `instituicoes.html`.
+3. Teste manual: conectar e revogar instituições, recarregando a página em cada etapa.
+4. Versionamento no GitHub: branch `feature/persistir-estado-conexoes`, commit e Pull Request #1, integrado na `main` do fork.
+5. Deploy no Render como Static Site, conectado à `main` (Build Command vazio e Publish Directory `.`).
+6. Validação no site publicado: as conexões e revogações continuam após recarregar a página.
 
 ## Telas
 
 | Tela | Arquivo | O que faz |
-| --- | --- | --- |
+|---|---|---|
 | Login | `index.html` | Formulário de acesso com validação da senha em tempo real e botão para mostrar/ocultar a senha. |
 | Início | `inicio.html` | Resumo do patrimônio total, gráfico de rosca com a composição (investimentos, contas e crédito) e saldo por instituição. |
-| Instituições | `instituicoes.html` | Lista de instituições com status de conexão. Permite conectar e revogar o compartilhamento de dados, sempre com um modal de confirmação. |
+| Instituições | `instituicoes.html` | Lista de instituições com status de conexão. Permite conectar e revogar o compartilhamento de dados, sempre com um modal de confirmação. O estado das conexões é salvo no navegador. |
 | Extrato | `extrato.html` | Tabela de transações com busca por texto e filtros de instituição, categoria e período. Mostra os filtros aplicados como chips e o total do resultado. |
 | Fluxo de caixa | `fluxo.html` | Projeção do saldo para os próximos meses em gráfico de linha, calculada a partir de receitas e despesas recorrentes. |
 
@@ -27,9 +46,10 @@ Protótipo front-end de um hub financeiro baseado em Open Finance: reúne contas
 - Gráfico de rosca feito com `conic-gradient` no CSS, com `aria-label` descrevendo os percentuais.
 
 **Instituições**
-- Nubank e Inter começam conectados; Itaú começa desconectado.
+- Nubank e Inter começam conectados; Itaú começa desconectado (estado inicial padrão).
 - Revogar acesso abre um modal explicando o efeito. Conectar abre um modal com os dados a confirmar (instituição, titular, tipo de conta e agência).
 - Cada card muda de estado (selo, descrição e botão) e a mudança é anunciada para leitores de tela por uma região `aria-live`.
+- **Novo:** o estado de cada conexão é salvo no navegador e restaurado ao recarregar a página.
 
 **Extrato**
 - Busca por descrição e filtros por instituição, categoria e período (mês/ano inicial e final).
@@ -42,15 +62,15 @@ Protótipo front-end de um hub financeiro baseado em Open Finance: reúne contas
 - O saldo de cada mês é o saldo inicial somado ao líquido mensal dos recorrentes. O gráfico em SVG é desenhado por JavaScript e redesenhado ao redimensionar a janela.
 - Uma tabela oculta visualmente (`sr-only`) traz os mesmos dados do gráfico para leitores de tela.
 
-**Layout compartilhado** (`js/layout.js`)
+**Layout compartilhado (`js/layout.js`)**
 - Menu lateral de navegação nas telas internas, com botão "Sair" que pede confirmação antes de voltar ao login.
-- O script também traz a lógica de um menu hambúrguer com overlay (fecha por clique fora e pela tecla `Esc`), mas o botão está oculto no CSS atual; no celular a navegação é feita pela barra de abas (veja Responsividade).
+- O script também traz a lógica de um menu hambúrguer com overlay (fecha por clique fora e pela tecla Esc), mas o botão está oculto no CSS atual; no celular a navegação é feita pela barra de abas (veja Responsividade).
 
 ## Acessibilidade
 
 - HTML semântico (`main`, `nav`, `section`, `article`, `table` com `scope`) e `lang="pt-BR"`.
 - Rótulos para todos os campos, `aria-current` no item ativo do menu, `aria-expanded` no botão do menu e `role="alert"` nos erros.
-- Modais com `role="dialog"`, `aria-modal`, foco movido para dentro ao abrir, foco preso (Tab/Shift+Tab), fechamento com `Esc` e retorno do foco ao botão de origem.
+- Modais com `role="dialog"`, `aria-modal`, foco movido para dentro ao abrir, foco preso (Tab/Shift+Tab), fechamento com Esc e retorno do foco ao botão de origem.
 - Estados indicados por texto além da cor (por exemplo "Conectado/Desconectado" e ✓/× nos requisitos da senha).
 - Foco visível nos botões e links e respeito a `prefers-reduced-motion` na tela de login.
 
@@ -67,7 +87,9 @@ Layout adaptado para telas menores (breakpoint em 900px nas telas internas e 800
 - HTML5
 - CSS3 (variáveis CSS para cores, tipografia, espaçamentos e raios; um arquivo por tela)
 - JavaScript (ES6+), sem frameworks nem dependências
-- Fonte [Inter](https://fonts.google.com/specimen/Inter) via Google Fonts
+- `localStorage` do navegador para guardar o estado das conexões
+- Fonte Inter via Google Fonts
+- GitHub para versionamento e Render para hospedagem
 
 ## Estrutura do projeto
 
@@ -90,7 +112,7 @@ Layout adaptado para telas menores (breakpoint em 900px nas telas internas e 800
 └── js/
     ├── layout.js        # Botão sair e lógica do menu hambúrguer
     ├── login.js         # Validação da senha e redirecionamento
-    ├── instituicoes.js  # Estados dos cards e modais
+    ├── instituicoes.js  # Estados dos cards, modais e persistência das conexões
     ├── extrato.js       # Dados, filtros e renderização da tabela
     └── fluxo.js         # Cálculo da projeção e gráfico SVG
 ```
@@ -100,7 +122,7 @@ Layout adaptado para telas menores (breakpoint em 900px nas telas internas e 800
 Não precisa instalar nada. Basta clonar e abrir no navegador:
 
 ```bash
-git clone https://github.com/tainagrunberg/open-finance-hub-project.git
+git clone https://github.com/Trizxxw/open-finance-hub-project.git
 cd open-finance-hub-project
 ```
 
@@ -118,4 +140,5 @@ Para entrar no protótipo, use qualquer usuário e uma senha que cumpra os quatr
 - Não há back-end, banco de dados nem integração real com Open Finance; todos os dados são fictícios.
 - O login não autentica: as telas internas podem ser abertas diretamente, sem sessão.
 - Os links "Esqueci a senha" e "Criar conta" ainda não levam a lugar nenhum.
-- O estado das conexões e dos filtros não é salvo; ao recarregar a página tudo volta ao padrão.
+- O estado das conexões é salvo apenas no navegador em uso (por navegador e por endereço do site); não é compartilhado entre dispositivos.
+- Os filtros do Extrato não são salvos; ao recarregar a página voltam ao padrão.
